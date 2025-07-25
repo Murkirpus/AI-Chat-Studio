@@ -7,7 +7,8 @@
 
 Создавайте своих AI ассистентов, ищите по истории переписки и общайтесь с 24+ моделями включая GPT-4, Claude, Gemini и другими.
 
-![AI Chat Studio](https://via.placeholder.com/800x400/667eea/ffffff?text=AI+Chat+Studio+Screenshot)
+### Главный интерфейс
+<img src="images/Screenshot 2025-07-21 145147.png" alt="Выбор модели" width="600">
 
 ## ✨ Основные возможности
 
