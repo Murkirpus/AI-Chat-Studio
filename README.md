@@ -21,10 +21,9 @@
 
 ## 🚀 Быстрый запуск
 
-1. **Клонируйте репозиторий**
+1. **Скачайте файл**
    ```bash
-   git clone https://github.com/yourusername/AI-Chat-Studio.git
-   cd AI-Chat-Studio
+   AI-Chat-OpenRouter.php
    ```
 
 2. **Установите Redis**
