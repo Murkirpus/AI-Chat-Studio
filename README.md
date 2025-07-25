@@ -33,13 +33,10 @@
    sudo apt install redis-server
    sudo systemctl start redis
    
-   # Или через Docker
-   docker run -d -p 6379:6379 redis:alpine
-   ```
 
 3. **Настройте конфигурацию**
    ```php
-   // Отредактируйте API ключ OpenRouter в файле chat.php
+   // Отредактируйте API ключ OpenRouter в файле AI-Chat-OpenRouter.php
    $openrouter_api_key = 'ваш-api-ключ';
    ```
 
