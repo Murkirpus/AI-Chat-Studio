@@ -1,7 +1,7 @@
 <?php
 // AI Chat с поддержкой Redis и множественными промптами
 // Конфигурация
-$openrouter_api_key = 'sk-or-';
+$openrouter_api_key = 'sk-or-v1-';
 $app_name = 'AI Чат Ассистент';
 $site_url = 'https://yourdomain.com';
 
@@ -1111,9 +1111,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             addMessageToHistory($redis, $chat_session_id, $user_message);
         }
         
-        // Получаем системный промпт
+        // Получаем системный промпт - ИСПРАВЛЕНО для кастомных промптов
         $prompts = getChatPrompts();
-        $system_prompt = $prompts[$prompt_type]['system_prompt'] ?? $prompts['general']['system_prompt'];
+        $system_prompt = '';
+        
+        if (strpos($prompt_type, 'custom_') === 0) {
+            // Кастомный промпт - берем из переданных данных
+            $system_prompt = trim($_POST['custom_prompt'] ?? '');
+            if (empty($system_prompt)) {
+                $system_prompt = $prompts['general']['system_prompt'];
+            }
+        } else {
+            // Системный промпт
+            $system_prompt = $prompts[$prompt_type]['system_prompt'] ?? $prompts['general']['system_prompt'];
+        }
         
         // Получаем историю для контекста
         $history = $redis_connected ? getChatHistory($redis, $chat_session_id) : [];
@@ -3210,9 +3221,9 @@ $chat_history = $redis_connected ? getChatHistory($redis, $chat_session_id) : []
                     if (draftData.name || draftData.description || draftData.content) {
                         const restore = confirm('Обнаружен черновик промпта. Восстановить?');
                         if (restore) {
-                            nameField.value = draftData.name || '';
-                            descField.value = draftData.description || '';
-                            contentField.value = draftData.content || '';
+                            document.getElementById('promptName').value = draftData.name || '';
+                            document.getElementById('promptDescription').value = draftData.description || '';
+                            document.getElementById('promptContent').value = draftData.content || '';
                             document.getElementById('selectedEmoji').value = draftData.emoji || '🎯';
                             
                             // Обновляем выбранную иконку
@@ -3228,37 +3239,6 @@ $chat_history = $redis_connected ? getChatHistory($redis, $chat_session_id) : []
                     console.error('Ошибка восстановления черновика:', e);
                 }
             }
-        }
-
-        function setupFormValidation() {
-            const nameField = document.getElementById('promptName');
-            const descField = document.getElementById('promptDescription');
-            const contentField = document.getElementById('promptContent');
-            const saveBtn = document.querySelector('#createPromptModal .modal-btn.primary');
-            
-            function validateForm() {
-                const isValid = nameField.value.trim() && descField.value.trim() && contentField.value.trim();
-                saveBtn.disabled = !isValid;
-                saveBtn.style.opacity = isValid ? '1' : '0.5';
-            }
-            
-            // Начальная валидация
-            validateForm();
-            
-            // Валидация при изменении + автосохранение черновика
-            [nameField, descField, contentField].forEach(field => {
-                field.addEventListener('input', function() {
-                    validateForm();
-                    // Автосохранение черновика
-                    const draft = {
-                        name: nameField.value,
-                        description: descField.value,
-                        content: contentField.value,
-                        emoji: document.getElementById('selectedEmoji').value
-                    };
-                    localStorage.setItem('promptDraft_<?php echo $_SESSION['username']; ?>', JSON.stringify(draft));
-                });
-            });
         }
 
         function hideCreatePromptModal() {
@@ -3612,16 +3592,34 @@ $chat_history = $redis_connected ? getChatHistory($redis, $chat_session_id) : []
             }
         }
 
+        // ИСПРАВЛЕННАЯ функция updatePromptInfo для поддержки кастомных промптов
         function updatePromptInfo() {
             const select = document.getElementById('promptSelect');
             const info = document.getElementById('promptInfo');
             const selectedPrompt = select.value;
-            const prompt = prompts[selectedPrompt];
             
-            if (prompt) {
+            let promptData = null;
+            
+            if (selectedPrompt.startsWith('custom_')) {
+                // Кастомный промпт
+                const key = selectedPrompt.replace('custom_', '');
+                const customPrompt = customPrompts[key];
+                if (customPrompt) {
+                    promptData = {
+                        icon: customPrompt.icon,
+                        name: customPrompt.name,
+                        description: customPrompt.description
+                    };
+                }
+            } else {
+                // Системный промпт
+                promptData = prompts[selectedPrompt];
+            }
+            
+            if (promptData) {
                 info.innerHTML = `
-                    <strong>${prompt.icon} ${prompt.name}</strong><br>
-                    ${prompt.description}
+                    <strong>${promptData.icon} ${promptData.name}</strong><br>
+                    ${promptData.description}
                 `;
             }
         }
@@ -3712,6 +3710,8 @@ $chat_history = $redis_connected ? getChatHistory($redis, $chat_session_id) : []
         function setPromptAndFocus(promptKey) {
             document.getElementById('promptSelect').value = promptKey;
             updatePromptInfo();
+            // Сохраняем выбранный промпт в localStorage
+            localStorage.setItem('selected_prompt_<?php echo $_SESSION['username']; ?>', promptKey);
             document.getElementById('messageInput').focus();
         }
 
@@ -3733,6 +3733,7 @@ $chat_history = $redis_connected ? getChatHistory($redis, $chat_session_id) : []
             }, 2000);
         }
 
+        // ИСПРАВЛЕННАЯ функция addMessageToUI для поддержки кастомных промптов
         function addMessageToUI(message) {
             const chatMessages = document.getElementById('chatMessages');
             
@@ -3746,7 +3747,25 @@ $chat_history = $redis_connected ? getChatHistory($redis, $chat_session_id) : []
             messageDiv.className = `message ${message.role}`;
             
             const modelInfo = message.model ? models[message.model] : null;
-            const promptInfo = message.prompt_type ? prompts[message.prompt_type] : null;
+            
+            // ИСПРАВЛЕНИЕ: поддержка кастомных промптов
+            let promptInfo = null;
+            if (message.prompt_type) {
+                if (message.prompt_type.startsWith('custom_')) {
+                    // Кастомный промпт
+                    const key = message.prompt_type.replace('custom_', '');
+                    const customPrompt = customPrompts[key];
+                    if (customPrompt) {
+                        promptInfo = {
+                            icon: customPrompt.icon,
+                            name: customPrompt.name
+                        };
+                    }
+                } else {
+                    // Системный промпт
+                    promptInfo = prompts[message.prompt_type];
+                }
+            }
             
             // Генерируем уникальный ID для кнопки копирования
             const copyBtnId = 'copy-btn-' + Math.random().toString(36).substr(2, 9);
