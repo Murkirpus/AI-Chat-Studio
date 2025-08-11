@@ -2953,6 +2953,12 @@ $chat_history = $redis_connected ? getChatHistory($redis, $chat_session_id) : []
                 <button class="control-btn export" onclick="exportChat()">
                     <i class="fas fa-download"></i> Экспорт истории
                 </button>
+				<a href="https://openrouter.ai/settings/keys" target="_blank" class="control-btn" style="background: #007bff; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <i class="fas fa-key"></i> API Ключи
+    </a>
+    <a href="https://openrouter.ai/settings/credits" target="_blank" class="control-btn" style="background: #28a745; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <i class="fas fa-dollar-sign"></i> Кредиты
+    </a>
                 <a href="?action=logout" class="control-btn logout" onclick="return confirm('Выйти из системы?')">
                     <i class="fas fa-sign-out-alt"></i> Выйти
                 </a>
