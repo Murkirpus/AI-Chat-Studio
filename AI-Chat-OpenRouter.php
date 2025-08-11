@@ -882,6 +882,28 @@ function getOpenRouterModels() {
         ],
 
         // 🚀 НОВЕЙШИЕ И ПОПУЛЯРНЫЕ МОДЕЛИ
+		'openai/gpt-5-chat' => [
+    'name' => '🚀 GPT-5 Chat',
+    'description' => 'Продвинутая модель GPT-5 для диалогов',
+    'price' => '$8.00 / $40.00 за 1М токенов',
+    'cost_1000' => '$48.00',
+    'speed' => '⚡⚡⚡',
+    'quality' => '⭐⭐⭐⭐⭐',
+    'recommended' => true,
+    'category' => 'newest'
+],
+
+'openai/gpt-5-mini' => [
+    'name' => '🚀 GPT-5 Mini',
+    'description' => 'Быстрая и экономичная версия GPT-5',
+    'price' => '$2.00 / $10.00 за 1М токенов',
+    'cost_1000' => '$12.00',
+    'speed' => '⚡⚡⚡⚡⚡',
+    'quality' => '⭐⭐⭐⭐',
+    'recommended' => true,
+    'category' => 'newest'
+],
+
         'anthropic/claude-3.7-sonnet' => [
             'name' => '🚀 Claude 3.7 Sonnet',
             'description' => 'Новейшая модель Anthropic с улучшенными возможностями',
